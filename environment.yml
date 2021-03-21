@@ -1,0 +1,13 @@
+name: csr3d
+channels:
+  - conda-forge
+dependencies:
+  - python=3
+  - scipy
+  - numpy
+  - numba
+  - ipykernel
+  - jupyterlab
+  - matplotlib-base
+  - h5py
+  - mpmath
