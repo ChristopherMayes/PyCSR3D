@@ -5,7 +5,7 @@ from scipy.optimize import root_scalar
 
 from numpy import abs, sin, cos, real, exp, pi, cbrt, sqrt, sign
 
-from csr3d.core import psi_s
+from csr3d.core import psi_calc
 
 
 def symmetric_vec(n, d):
@@ -15,7 +15,7 @@ def symmetric_vec(n, d):
     """
     return np.arange(-n+1,n+1,1)*d
 
-def green_meshes(density_shape, deltas, rho=None, beta=None, offset=(0,0,0)):
+def green_meshes(density_shape, deltas, rho=None, beta=None, offset=(0,0,0), components=['s']):
     """
     Computes Green funcion meshes for psi_s and psi_x simultaneously.
     These meshes are in real space (not scaled space).
@@ -63,12 +63,24 @@ def green_meshes(density_shape, deltas, rho=None, beta=None, offset=(0,0,0)):
     vecs = [symmetric_vec(n, delta) for n, delta, o in zip(density_shape, [dx,dy,dz], offset)] 
     meshes = np.meshgrid(*vecs, indexing='ij')
 
-    # Offset center singularity
-    center = (nx-1,ny-1,nz-1)
-    meshes[0][center] = dx/2
+    # Offset singularity along z axis (x =0, y = 0)
+    # Same as in the CSR 2D code
+    center = (nx-1,ny-1,nz-1)    
+    meshes[0][nx-1,ny-1,:] = -dx/2
+    meshes[0][-1,ny-1,:] = dx/2
     
-    psi_s_grid = psi_s(*meshes, beta=beta)
-    psi_s_grid[center] = 0
+    # This does all the calcs
+    potential = psi_calc(*meshes, beta=beta, components=components)
+
+    # Rename for output
+    out = {}
+    for k, field in potential.items():
+        # Average out this axis
+        field[nx-1,ny-1,:] = (field[nx-1,ny-1,:] + field[-1,ny-1,:])/2
+        out[k+'_mesh'] = potential[k]
+
+        # Replace origin
+#        potential[k][center] = 0
     
-    return psi_s_grid
+    return out
     

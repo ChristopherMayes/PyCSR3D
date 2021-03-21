@@ -4,7 +4,7 @@ import scipy.special as ss
 from scipy.optimize import root_scalar
 
 from numpy import abs, sin, cos, real, exp, pi, cbrt, sqrt, sign
-
+import scipy.special as ss
 
 
 
@@ -14,29 +14,113 @@ from numpy import abs, sin, cos, real, exp, pi, cbrt, sqrt, sign
 
 
 
-def psi_s(x, y, z, beta):
-    """
-    
-    Eq. 23 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
-    
-    """
+#def psi_s(x, y, z, beta):
+#    """
+#    
+#    Eq. 23 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
+#    
+#    """
+#
+#    beta2 = beta**2
+#    
+#    
+#    alp = alpha(x, y, z, beta2)
+#    
+#    kap = 2*(alp - z)/beta # Simpler form of kappa
+#    
+#    sin2a = sin(2*alp)
+#    cos2a = cos(2*alp)    
+#
+#    out = (cos2a - 1/(1+x)) / (kap - beta*(1+x)*sin2a)
+#    
+#    return out
 
+
+
+def psi_calc(x, y, z, beta, components=['x', 'y', 's']):
+    """
+    Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
+    """
+    
+    potential = {}
+    
     beta2 = beta**2
     
-    
     alp = alpha(x, y, z, beta2)
-    
     kap = 2*(alp - z)/beta # Simpler form of kappa
-    
+    #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
+
+    # Common patterns
     sin2a = sin(2*alp)
-    cos2a = cos(2*alp)    
-    
-    out = (cos2a - 1/(1+x)) / (kap - beta*(1+x)*sin2a)
-    
-    return out
-    
+    cos2a = cos(2*alp)
 
+    if 's' in components:        
+        potential['psi_s'] = (cos2a - 1/(1+x)) / (kap - beta*(1+x)*sin2a)
+        if len(components) == 1:
+            return potential
 
+    kap2 = kap**2
+    sin2a2 = sin2a**2
+    
+    x2 = x**2 
+    y2 = y**2
+    y4 = y2**2
+    xp = x + 1
+    xp2 = xp**2
+    xy2 = x2 + y2
+    xy = np.sqrt(xy2)
+    
+    # More complicated pattens
+    f1 = 2 + 2*x +x2
+    f2 = (2+x)**2
+    arg2 = -4 * xp / xy2 
+    
+    F = ss.ellipkinc(alp, arg2) # Incomplete elliptic integral of the first kind K(phi, m), also called F(phi, m)
+    E = ss.ellipeinc(alp, arg2)# Incomplete elliptic integral of the second kind E(phi, m)
+    
+    #print((2/beta2)* F/xy)
+    
+    # psi_x (actually psi_x_hat that includes the psi_phi term)
+    # There is an extra ] in the numerator of the second term. All terms should multiply E. 
+    if 'x' in components:
+        psi_x_out = f1*F / (xp*xy) - (x2*f2 + y2*f1)*E / (xp*(y2+f2)*xy)  \
+            + ( kap2 - 2*beta2*xp2 + beta2*xp*f1*cos2a  ) / (beta *xp*(kap2 - beta2*xp2*sin2a2)) \
+            + kap*( y4 - x2*f2 - 2*beta2*y2*xp2 )*sin2a / ( xy2*(y2 + f2)*(kap2-beta2*xp2*sin2a2)  ) \
+            + kap*beta2*xp*( x2*f2 + y2*f1 )*sin2a*cos2a / ( xy2*(y2+f2)*(kap2-beta2*xp2*sin2a2)  )
+          
+        potential['psi_x'] = psi_x_out - (2/beta2)* F/xy # Include the phi term
+        
+    
+    # psi_phi
+    if 'phi' in components:
+        potential['psi_phi'] = (2/beta2)* F/xy  # Prefactor to be consistent with other returns
+        
+    
+    # psi_y
+    if 'y' in components:    
+        psi_y_out = y * ( \
+                    F/xy - (x*(2+x)+y2)*E / ((y2+f2)*xy) \
+                    - beta*(1-xp*cos2a) / (kap2-beta2*xp2*sin2a2) \
+                    + kap*xp*( -(2+beta2)*y2 + (-2+beta2)*x*(2+x) ) * sin2a / ( (y4 + x2*f2 + 2*y2*f1)*( kap2-beta2*xp2*sin2a2 ) ) \
+                    + kap*beta2*xp2*(y2 + x*(2+x))*sin2a*cos2a / ( ( y4 + x2*f2 + 2*y2*f1)*(kap2 -beta2*xp2*sin2a2)  ) \
+                    )
+        potential['psi_y'] = psi_y_out
+    
+    
+    return potential
+    
+# Conveniences
+def psi_x(x, y, z, beta):
+    return psi_calc(x, y, z, beta, components=['x'])['psi_x']
+    
+def psi_y(x, y, z, beta):
+    return psi_calc(x, y, z, beta, components=['y'])['psi_y']
+
+def psi_s(x, y, z, beta):
+    return psi_calc(x, y, z, beta, components=['s'])['psi_s']
+
+def psi_phi(x, y, z, beta):
+    return psi_calc(x, y, z, beta, components=['phi'])['psi_phi']
 
 
 
