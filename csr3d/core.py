@@ -301,9 +301,12 @@ def alpha(x, y, z, beta2):
     return (zsign*arg1 + np.sqrt(abs(arg2 -zsign*arg3)))/2
 
 
-@vectorize([float64(float64, float64, float64, float64)])
+@vectorize([float64(float64, float64, float64, float64)], target='parallel')
 def psi_s(x, y, z, beta):
     """
+    
+    Numba, parallel
+    
     Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
     """
     
@@ -372,10 +375,12 @@ def psi_x(x, y, z, beta):
     
     return psi_xhat_out
 
-@vectorize([float64(float64, float64, float64, float64, float64, float64, float64)])
+@vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
 def psi_x0(x, y, z, beta, dx, dy, dz):
     """
     Same as psi_x, but checks for evaluation on the z and x axes.
+    
+    Numba, parallel
     
     There are singularities along the z and x axes.
     This attempts to average them out. 
@@ -463,10 +468,12 @@ def psi_y(x, y, z, beta):
     return psi_y_out
 
 
-@vectorize([float64(float64, float64, float64, float64, float64, float64, float64)])
+@vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
 def psi_y0(x, y, z, beta, dx, dy, dz):
     """
     Same as psi_y, but checks for evaluation on the z and x axes.
+    
+    Numba, parallel
     
     There are singularities along the z and x axes.
     This attempts to average them out. 
