@@ -21,39 +21,17 @@ import scipy.special as ss
 
 
 
-#def psi_s(x, y, z, beta):
-#    """
-#    
-#    Eq. 23 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
-#    
-#    """
-#
-#    beta2 = beta**2
-#    
-#    
-#    alp = alpha(x, y, z, beta2)
-#    
-#    kap = 2*(alp - z)/beta # Simpler form of kappa
-#    
-#    sin2a = sin(2*alp)
-#    cos2a = cos(2*alp)    
-#
-#    out = (cos2a - 1/(1+x)) / (kap - beta*(1+x)*sin2a)
-#    
-#    return out
-
-
-
-def psi_calc(x, y, z, beta, components=['x', 'y', 's']):
+def psi_calc(x, y, z, gamma, components=['x', 'y', 's']):
     """
     Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
     """
     
     potential = {}
     
-    beta2 = beta**2
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
     
-    alp = old_alpha(x, y, z, beta2)
+    alp = old_alpha(x, y, z, gamma)
     kap = 2*(alp - z)/beta # Simpler form of kappa
     #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
 
@@ -117,17 +95,17 @@ def psi_calc(x, y, z, beta, components=['x', 'y', 's']):
     return potential
     
 # Conveniences
-def old_psi_x(x, y, z, beta):
-    return psi_calc(x, y, z, beta, components=['x'])['psi_x']
+def old_psi_x(x, y, z, gamma):
+    return psi_calc(x, y, z, gamma, components=['x'])['psi_x']
     
-def old_psi_y(x, y, z, beta):
-    return psi_calc(x, y, z, beta, components=['y'])['psi_y']
+def old_psi_y(x, y, z, gamma):
+    return psi_calc(x, y, z, gamma, components=['y'])['psi_y']
 
-def old_psi_s(x, y, z, beta):
-    return psi_calc(x, y, z, beta, components=['s'])['psi_s']
+def old_psi_s(x, y, z, gamma):
+    return psi_calc(x, y, z, gamma, components=['s'])['psi_s']
 
-def old_psi_phi(x, y, z, beta):
-    return psi_calc(x, y, z, beta, components=['phi'])['psi_phi']
+def old_psi_phi(x, y, z, gamma):
+    return psi_calc(x, y, z, gamma, components=['phi'])['psi_phi']
 
 
 
@@ -138,7 +116,7 @@ def old_psi_phi(x, y, z, beta):
 #----------------------------------------------
 # Alpha calc
 
-def alpha_where_z_not_zero(x, y, z, beta2):
+def alpha_where_z_not_zero(x, y, z, gamma):
     """
     
     Eq. (6) from Ref[X] using the solution in 
@@ -146,6 +124,8 @@ def alpha_where_z_not_zero(x, y, z, beta2):
     
     
     """
+    
+    beta2 = 1-1/gamma**2
 
     # Terms of the depressed quartic equation
     eta = -6 * z / (beta2 * (1+x))
@@ -169,11 +149,13 @@ def alpha_where_z_not_zero(x, y, z, beta2):
     return (zsign*arg1 + sqrt(abs(arg2 -zsign*arg3)))/2
 
 
-def alpha_where_z_equals_zero(x, y, beta2):
+def alpha_where_z_equals_zero(x, y, gamma):
     """
     Evaluate alpha(x, y, z) when z is zero.
     Eq. (6) from Ref[1] simplifies to a quadratic equation for alpha^2.
     """
+    beta2 = 1-1/gamma**2
+    
     #b = 3 * (1/beta2 - 1 - x) / (1+x)
     b = 3 * (1 - beta2 - beta2*x) / beta2 / (1+x)    
     c = -3*(x**2 + y**2)/(4*(1+x))
@@ -185,7 +167,7 @@ def alpha_where_z_equals_zero(x, y, beta2):
     return sqrt(root1)
 
 
-def old_alpha(x, y, z, beta2):
+def old_alpha(x, y, z, gamma):
     """
     Retarded angle alpha
     
@@ -195,15 +177,15 @@ def old_alpha(x, y, z, beta2):
     
     """
     
-    
+    beta2 = 1-1/gamma**2
     
     on_x_axis = z == 0
     # Check for scalar, then return the normal functions
     if not isinstance(z, np.ndarray):
         if on_x_axis:
-            return alpha_where_z_equals_zero(x, y, beta2)
+            return alpha_where_z_equals_zero(x, y, gamma)
         else:
-            return alpha_where_z_not_zero(x, y, z, beta2)
+            return alpha_where_z_not_zero(x, y, z, gamma)
     # Array z
     out = np.empty(z.shape)
     ix1 = np.where(on_x_axis)
@@ -226,20 +208,21 @@ def old_alpha(x, y, z, beta2):
         y1 = y
         y2 = y        
         
-    out[ix1] = alpha_where_z_equals_zero(x1, y1, beta2)
-    out[ix2] = alpha_where_z_not_zero(x2, y2, z[ix2], beta2)
+    out[ix1] = alpha_where_z_equals_zero(x1, y1, gamma)
+    out[ix2] = alpha_where_z_not_zero(x2, y2, z[ix2], gamma)
     return out
 
 
 @np.vectorize
-def alpha_exact(x, y, z, beta2):
+def alpha_exact(x, y, z, gamma):
     """
     Exact alpha calculation using numerical root finding.
 
     
     Eq. (5) from Ref[X]
     """
-    beta = sqrt(beta2)
+    beta = sqrt(1-1/gamma**2)
+    
 
     f = lambda a: a - beta/2*np.sqrt(x**2 + y**2 + 4*(1+x)*np.sin(a)**2 ) - z
     
@@ -255,7 +238,7 @@ def alpha_exact(x, y, z, beta2):
 
 
 @vectorize([float64(float64, float64, float64, float64)])
-def alpha(x, y, z, beta2):
+def alpha(x, y, z, gamma):
     """
     Numba vectorized form of alpha.
     See: https://numba.pydata.org/numba-doc/dev/user/vectorize.html
@@ -266,6 +249,9 @@ def alpha(x, y, z, beta2):
     
     
     """
+    
+    beta2 = 1-1/gamma**2
+    
     if z == 0:
         # Quadratic solution
         
@@ -302,7 +288,7 @@ def alpha(x, y, z, beta2):
 
 
 @vectorize([float64(float64, float64, float64, float64)], target='parallel')
-def psi_s(x, y, z, beta):
+def psi_s(x, y, z, gamma):
     """
     
     Numba, parallel
@@ -314,9 +300,10 @@ def psi_s(x, y, z, beta):
     if x == 0 and y == 0 and z == 0:
         return 0
     
-    beta2 = beta**2
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
     
-    alp = alpha(x, y, z, beta2)
+    alp = alpha(x, y, z, gamma)
     kap = 2*(alp - z)/beta # Simpler form of kappa
     #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
 
@@ -326,14 +313,15 @@ def psi_s(x, y, z, beta):
 
 
 @vectorize([float64(float64, float64, float64, float64)])
-def psi_x(x, y, z, beta):
+def psi_x(x, y, z, gamma):
     """
     Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
     """
         
-    beta2 = beta**2
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
     
-    alp = alpha(x, y, z, beta2)
+    alp = alpha(x, y, z, gamma)
     kap = 2*(alp - z)/beta # Simpler form of kappa
     #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
 
@@ -376,7 +364,7 @@ def psi_x(x, y, z, beta):
     return psi_xhat_out
 
 @vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
-def psi_x0(x, y, z, beta, dx, dy, dz):
+def psi_x0(x, y, z, gamma, dx, dy, dz):
     """
     Same as psi_x, but checks for evaluation on the z and x axes.
     
@@ -387,50 +375,51 @@ def psi_x0(x, y, z, beta, dx, dy, dz):
     
     """
     
-    #res = (psi_x(-dx/2, y, z, beta) +  psi_x(dx/2, y, z, beta))/2 # Average over x   
-    #res = (psi_x(x, -dy/2, z, beta) +  psi_x(x, dy/2, z, beta))/2 # Average over y
-    #res = (psi_x(x, y, -dz/2, beta) +  psi_x(x, y, dz/2, beta))/2 # Average over z    
+    #res = (psi_x(-dx/2, y, z, gamma) +  psi_x(dx/2, y, z, gamma))/2 # Average over x   
+    #res = (psi_x(x, -dy/2, z, gamma) +  psi_x(x, dy/2, z, gamma))/2 # Average over y
+    #res = (psi_x(x, y, -dz/2, gamma) +  psi_x(x, y, dz/2, gamma))/2 # Average over z    
     # Average over 4 points
-    #res = (psi_x(-dx/2, -dy/2, z, beta) +  psi_x(dx/2, -dy/2, z, beta) \
-    #      +psi_x(-dx/2,  dy/2, z, beta) +  psi_x(dx/2,  dy/2, z, beta))/4
-    #    res = (psi_x(x, -dy/2, -dz/2, beta) +  psi_x(x, dy/2, -dz/2, beta) \
-    #          +psi_x(x,  -dy/2, dz/2, beta) +  psi_x(x, dy/2, dz/2, beta))/4        
+    #res = (psi_x(-dx/2, -dy/2, z, gamma) +  psi_x(dx/2, -dy/2, z, gamma) \
+    #      +psi_x(-dx/2,  dy/2, z, gamma) +  psi_x(dx/2,  dy/2, z, gamma))/4
+    #    res = (psi_x(x, -dy/2, -dz/2, gamma) +  psi_x(x, dy/2, -dz/2, gamma) \
+    #          +psi_x(x,  -dy/2, dz/2, gamma) +  psi_x(x, dy/2, dz/2, gamma))/4        
                
     # There are singularities along these axes. 
     # 
     if x == 0 and y == 0:
         # Along z axis
         #print('Along z axis')
-        res = (psi_x(-dx/2, y, z, beta) +  psi_x(dx/2, y, z, beta))/2 # Average over x (same as CSR2D)
-        #res = (psi_x(x, -dy/2, z, beta) +  psi_x(x, dy/2, z, beta))/2 # Average over y
+        res = (psi_x(-dx/2, y, z, gamma) +  psi_x(dx/2, y, z, gamma))/2 # Average over x (same as CSR2D)
+        #res = (psi_x(x, -dy/2, z, gamma) +  psi_x(x, dy/2, z, gamma))/2 # Average over y
         # Average over 4 points:
-        #res = (psi_x(-dx/2, -dy/2, z, beta) +  psi_x(dx/2, -dy/2, z, beta) \
-        #      +psi_x(-dx/2,  dy/2, z, beta) +  psi_x(dx/2,  dy/2, z, beta))/4        
+        #res = (psi_x(-dx/2, -dy/2, z, gamma) +  psi_x(dx/2, -dy/2, z, gamma) \
+        #      +psi_x(-dx/2,  dy/2, z, gamma) +  psi_x(dx/2,  dy/2, z, gamma))/4        
         
         #res = 0
         
     elif y == 0 and z == 0:
         # Along x axis
         #print('Along x axis')
-        res = (psi_x(x, -dy/2, z, beta) +  psi_x(x, dy/2, z, beta))/2 # Average over y
-        #res = (psi_x(x, y, -dz/2, beta) +  psi_x(x, y, dz/2, beta))/2 # Average over z    
+        res = (psi_x(x, -dy/2, z, gamma) +  psi_x(x, dy/2, z, gamma))/2 # Average over y
+        #res = (psi_x(x, y, -dz/2, gamma) +  psi_x(x, y, dz/2, gamma))/2 # Average over z    
   
     else:
-        res =  psi_x(x, y, z, beta)
+        res =  psi_x(x, y, z, gamma)
 
     return res
 
 
 
 @vectorize([float64(float64, float64, float64, float64)])
-def psi_y(x, y, z, beta):
+def psi_y(x, y, z, gamma):
     """
     Eq. 25 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
     """
         
-    beta2 = beta**2
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
     
-    alp = alpha(x, y, z, beta2)
+    alp = alpha(x, y, z, gamma)
     kap = 2*(alp - z)/beta # Simpler form of kappa
     #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
 
@@ -469,7 +458,7 @@ def psi_y(x, y, z, beta):
 
 
 @vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
-def psi_y0(x, y, z, beta, dx, dy, dz):
+def psi_y0(x, y, z, gamma, dx, dy, dz):
     """
     Same as psi_y, but checks for evaluation on the z and x axes.
     
@@ -480,36 +469,36 @@ def psi_y0(x, y, z, beta, dx, dy, dz):
     
     """
     
-    #res = (psi_y(-dx/2, y, z, beta) +  psi_y(dx/2, y, z, beta))/2 # Average over x   
-    #res = (psi_y(x, -dy/2, z, beta) +  psi_y(x, dy/2, z, beta))/2 # Average over y
-    #res = (psi_y(x, y, -dz/2, beta) +  psi_y(x, y, dz/2, beta))/2 # Average over z    
+    #res = (psi_y(-dx/2, y, z, gamma) +  psi_y(dx/2, y, z, gamma))/2 # Average over x   
+    #res = (psi_y(x, -dy/2, z, gamma) +  psi_y(x, dy/2, z, gamma))/2 # Average over y
+    #res = (psi_y(x, y, -dz/2, gamma) +  psi_y(x, y, dz/2, gamma))/2 # Average over z    
     # Average over 4 points
-    #res = (psi_y(-dx/2, -dy/2, z, beta) +  psi_y(dx/2, -dy/2, z, beta) \
-    #      +psi_y(-dx/2,  dy/2, z, beta) +  psi_y(dx/2,  dy/2, z, beta))/4
-    #    res = (psi_y(x, -dy/2, -dz/2, beta) +  psi_y(x, dy/2, -dz/2, beta) \
-    #          +psi_y(x,  -dy/2, dz/2, beta) +  psi_y(x, dy/2, dz/2, beta))/4        
+    #res = (psi_y(-dx/2, -dy/2, z, gamma) +  psi_y(dx/2, -dy/2, z, gamma) \
+    #      +psi_y(-dx/2,  dy/2, z, gamma) +  psi_y(dx/2,  dy/2, z, gamma))/4
+    #    res = (psi_y(x, -dy/2, -dz/2, gamma) +  psi_y(x, dy/2, -dz/2, gamma) \
+    #          +psi_y(x,  -dy/2, dz/2, gamma) +  psi_y(x, dy/2, dz/2, gamma))/4        
                
     # There are singularities along these axes. 
     # 
     if x == 0 and y == 0:
         # Along z axis
         #print('Along z axis')
-        res = (psi_y(-dx/2, y, z, beta) +  psi_y(dx/2, y, z, beta))/2 # Average over x (same as CSR2D)
-        #res = (psi_y(x, -dy/2, z, beta) +  psi_y(x, dy/2, z, beta))/2 # Average over y
+        res = (psi_y(-dx/2, y, z, gamma) +  psi_y(dx/2, y, z, gamma))/2 # Average over x (same as CSR2D)
+        #res = (psi_y(x, -dy/2, z, gamma) +  psi_y(x, dy/2, z, gamma))/2 # Average over y
         # Average over 4 points:
-        #res = (psi_y(-dx/2, -dy/2, z, beta) +  psi_y(dx/2, -dy/2, z, beta) \
-        #      +psi_y(-dx/2,  dy/2, z, beta) +  psi_y(dx/2,  dy/2, z, beta))/4        
+        #res = (psi_y(-dx/2, -dy/2, z, gamma) +  psi_y(dx/2, -dy/2, z, gamma) \
+        #      +psi_y(-dx/2,  dy/2, z, gamma) +  psi_y(dx/2,  dy/2, z, gamma))/4        
         
         #res = 0
         
     elif y == 0 and z == 0:
         # Along x axis
         #print('Along x axis')
-        res = (psi_y(x, -dy/2, z, beta) +  psi_y(x, dy/2, z, beta))/2 # Average over y
-        #res = (psi_y(x, y, -dz/2, beta) +  psi_y(x, y, dz/2, beta))/2 # Average over z    
+        res = (psi_y(x, -dy/2, z, gamma) +  psi_y(x, dy/2, z, gamma))/2 # Average over y
+        #res = (psi_y(x, y, -dz/2, gamma) +  psi_y(x, y, dz/2, gamma))/2 # Average over z    
   
     else:
-        res =  psi_y(x, y, z, beta)
+        res =  psi_y(x, y, z, gamma)
 
     return res
 

@@ -13,7 +13,7 @@ def symmetric_vec(n, d):
     """
     return np.arange(-n+1,n+1,1)*d
 
-def green_mesh(density_shape, deltas, rho=None, beta=None, offset=(0,0,0), component='s'):
+def green_mesh(density_shape, deltas, rho=None, gamma=None, offset=(0,0,0), component='s'):
     """
     Computes Green funcion meshes for psi_s and psi_x simultaneously.
     These meshes are in real space (not scaled space).
@@ -26,8 +26,8 @@ def green_mesh(density_shape, deltas, rho=None, beta=None, offset=(0,0,0), compo
     deltas : tuple(float, float, float)
         mesh spacing corresonding to dx, dy, dz
         
-    beta : float
-        relativistic beta
+    gamma : float
+        relativistic gamma
     
     
     
@@ -62,12 +62,12 @@ def green_mesh(density_shape, deltas, rho=None, beta=None, offset=(0,0,0), compo
     meshes = np.meshgrid(*vecs, indexing='ij')
 
     if component == 'x':
-     #   green = psi_x(*meshes, beta)
-        green = psi_x0(*meshes, beta, dx, dy, dz)        
+     #   green = psi_x(*meshes, gamma)
+        green = psi_x0(*meshes, gamma, dx, dy, dz)        
     elif component == 'y':
-        green = psi_y0(*meshes, beta, dx, dy, dz)        
+        green = psi_y0(*meshes, gamma, dx, dy, dz)        
     elif component == 's':
-        green = psi_s(*meshes, beta)
+        green = psi_s(*meshes, gamma)
     else:
         raise ValueError(f'Unknown component: {component}')
 
