@@ -375,33 +375,18 @@ def psi_x0(x, y, z, gamma, dx, dy, dz):
     
     """
     
-    #res = (psi_x(-dx/2, y, z, gamma) +  psi_x(dx/2, y, z, gamma))/2 # Average over x   
-    #res = (psi_x(x, -dy/2, z, gamma) +  psi_x(x, dy/2, z, gamma))/2 # Average over y
-    #res = (psi_x(x, y, -dz/2, gamma) +  psi_x(x, y, dz/2, gamma))/2 # Average over z    
-    # Average over 4 points
-    #res = (psi_x(-dx/2, -dy/2, z, gamma) +  psi_x(dx/2, -dy/2, z, gamma) \
-    #      +psi_x(-dx/2,  dy/2, z, gamma) +  psi_x(dx/2,  dy/2, z, gamma))/4
-    #    res = (psi_x(x, -dy/2, -dz/2, gamma) +  psi_x(x, dy/2, -dz/2, gamma) \
-    #          +psi_x(x,  -dy/2, dz/2, gamma) +  psi_x(x, dy/2, dz/2, gamma))/4        
-               
+
     # There are singularities along these axes. 
     # 
     if x == 0 and y == 0:
         # Along z axis
         #print('Along z axis')
         res = (psi_x(-dx/2, y, z, gamma) +  psi_x(dx/2, y, z, gamma))/2 # Average over x (same as CSR2D)
-        #res = (psi_x(x, -dy/2, z, gamma) +  psi_x(x, dy/2, z, gamma))/2 # Average over y
-        # Average over 4 points:
-        #res = (psi_x(-dx/2, -dy/2, z, gamma) +  psi_x(dx/2, -dy/2, z, gamma) \
-        #      +psi_x(-dx/2,  dy/2, z, gamma) +  psi_x(dx/2,  dy/2, z, gamma))/4        
-        
-        #res = 0
         
     elif y == 0 and z == 0:
         # Along x axis
         #print('Along x axis')
         res = (psi_x(x, -dy/2, z, gamma) +  psi_x(x, dy/2, z, gamma))/2 # Average over y
-        #res = (psi_x(x, y, -dz/2, gamma) +  psi_x(x, y, dz/2, gamma))/2 # Average over z    
   
     else:
         res =  psi_x(x, y, z, gamma)
@@ -469,15 +454,7 @@ def psi_y0(x, y, z, gamma, dx, dy, dz):
     
     """
     
-    #res = (psi_y(-dx/2, y, z, gamma) +  psi_y(dx/2, y, z, gamma))/2 # Average over x   
-    #res = (psi_y(x, -dy/2, z, gamma) +  psi_y(x, dy/2, z, gamma))/2 # Average over y
-    #res = (psi_y(x, y, -dz/2, gamma) +  psi_y(x, y, dz/2, gamma))/2 # Average over z    
-    # Average over 4 points
-    #res = (psi_y(-dx/2, -dy/2, z, gamma) +  psi_y(dx/2, -dy/2, z, gamma) \
-    #      +psi_y(-dx/2,  dy/2, z, gamma) +  psi_y(dx/2,  dy/2, z, gamma))/4
-    #    res = (psi_y(x, -dy/2, -dz/2, gamma) +  psi_y(x, dy/2, -dz/2, gamma) \
-    #          +psi_y(x,  -dy/2, dz/2, gamma) +  psi_y(x, dy/2, dz/2, gamma))/4        
-               
+
     # There are singularities along these axes. 
     # 
     if x == 0 and y == 0:
