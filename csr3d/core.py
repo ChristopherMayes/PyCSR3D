@@ -313,9 +313,9 @@ def psi_s(x, y, z, gamma):
 
 
 @vectorize([float64(float64, float64, float64, float64)])
-def psi_x(x, y, z, gamma):
+def psi_xhat(x, y, z, gamma):
     """
-    Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
+    Psi_x - Psi_phi from Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
     """
         
     beta2 = 1-1/gamma**2
@@ -359,9 +359,111 @@ def psi_x(x, y, z, gamma):
           
     psi_phi_out = (2/beta2)* F/xy # Include the phi term        
         
-    psi_xhat_out = psi_x_out - psi_phi_out
+    psi_xhat_out = psi_x_out  - psi_phi_out
     
     return psi_xhat_out
+
+@vectorize([float64(float64, float64, float64, float64)])
+def psi_x(x, y, z, gamma):
+    """
+    Psi_x from Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
+    """
+        
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
+    
+    alp = alpha(x, y, z, gamma)
+    kap = 2*(alp - z)/beta # Simpler form of kappa
+    #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
+
+    # Common patterns
+    sin2a = sin(2*alp)
+    cos2a = cos(2*alp)
+
+    kap2 = kap**2
+    sin2a2 = sin2a**2
+    
+    x2 = x**2 
+    y2 = y**2
+    y4 = y2**2
+    xp = x + 1
+    xp2 = xp**2
+    xy2 = x2 + y2
+    xy = np.sqrt(xy2)
+    
+    # More complicated pattens
+    f1 = 2 + 2*x +x2
+    f2 = (2+x)**2
+    arg2 = -4 * xp / xy2 
+    
+    # Use my numba wrapped routines
+    F = my_ss.ellipkinc(alp, arg2) # Incomplete elliptic integral of the first kind K(phi, m), also called F(phi, m)
+    E = my_ss.ellipeinc(alp, arg2)# Incomplete elliptic integral of the second kind E(phi, m)
+        
+    # psi_x (see psi_xhat that includes the psi_phi term)
+    # There is an extra ] in the numerator of the second term. All terms should multiply E. 
+
+    psi_x_out = f1*F / (xp*xy) - (x2*f2 + y2*f1)*E / (xp*(y2+f2)*xy)  \
+            + ( kap2 - 2*beta2*xp2 + beta2*xp*f1*cos2a  ) / (beta *xp*(kap2 - beta2*xp2*sin2a2)) \
+            + kap*( y4 - x2*f2 - 2*beta2*y2*xp2 )*sin2a / ( xy2*(y2 + f2)*(kap2-beta2*xp2*sin2a2)  ) \
+            + kap*beta2*xp*( x2*f2 + y2*f1 )*sin2a*cos2a / ( xy2*(y2+f2)*(kap2-beta2*xp2*sin2a2)  )
+          
+    return psi_x_out
+
+
+
+@vectorize([float64(float64, float64, float64, float64)])
+def psi_phi(x, y, z, gamma):
+    """
+
+    Psi_phi from Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
+    """
+        
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
+    
+    alp = alpha(x, y, z, gamma)
+    xy2 = x**2 + y**2 
+    xy = np.sqrt(xy2)
+    
+    arg2 = -4 * (x + 1) / xy2
+    F = my_ss.ellipkinc(alp, arg2) 
+
+    psi_phi_out = (2/beta2)* F/xy 
+
+    return psi_phi_out
+
+@vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
+def psi_phi0(x, y, z, gamma, dx, dy, dz):
+    """
+    Same as psi_phi, but checks for evaluation on the z and x axes.
+    
+    Numba, parallel
+    
+    There are singularities along the z and x axes.
+    This attempts to average them out. 
+    
+    """
+    
+
+    # There are singularities along these axes. 
+    # 
+    if x == 0 and y == 0:
+        # Along z axis
+        #print('Along z axis')
+        res = (psi_phi(-dx/2, y, z, gamma) +  psi_phi(dx/2, y, z, gamma))/2 # Average over x (same as CSR2D)
+        
+    elif y == 0 and z == 0:
+        # Along x axis
+        #print('Along x axis')
+        res = (psi_phi(x, -dy/2, z, gamma) +  psi_phi(x, dy/2, z, gamma))/2 # Average over y
+  
+    else:
+        res =  psi_phi(x, y, z, gamma)
+
+    return res
+
+
 
 @vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
 def psi_x0(x, y, z, gamma, dx, dy, dz):
@@ -392,6 +494,37 @@ def psi_x0(x, y, z, gamma, dx, dy, dz):
         res =  psi_x(x, y, z, gamma)
 
     return res
+
+@vectorize([float64(float64, float64, float64, float64, float64, float64, float64)], target='parallel')
+def psi_xhat0(x, y, z, gamma, dx, dy, dz):
+    """
+    Same as psi_xhat, but checks for evaluation on the z and x axes.
+    
+    Numba, parallel
+    
+    There are singularities along the z and x axes.
+    This attempts to average them out. 
+    
+    """
+    
+
+    # There are singularities along these axes. 
+    # 
+    if x == 0 and y == 0:
+        # Along z axis
+        #print('Along z axis')
+        res = (psi_xhat(-dx/2, y, z, gamma) +  psi_xhat(dx/2, y, z, gamma))/2 # Average over x (same as CSR2D)
+        
+    elif y == 0 and z == 0:
+        # Along x axis
+        #print('Along x axis')
+        res = (psi_xhat(x, -dy/2, z, gamma) +  psi_xhat(x, dy/2, z, gamma))/2 # Average over y
+  
+    else:
+        res =  psi_xhat(x, y, z, gamma)
+
+    return res
+
 
 
 

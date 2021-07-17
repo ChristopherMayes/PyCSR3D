@@ -3,7 +3,7 @@ import scipy.special as ss
 
 from scipy.optimize import root_scalar
 
-from csr3d.core import psi_calc, psi_x, psi_x0, psi_y0, psi_y, psi_s
+from csr3d.core import psi_calc, psi_x0, psi_xhat0,  psi_y0, psi_y, psi_s, psi_phi0
 
 
 def symmetric_vec(n, d):
@@ -15,7 +15,7 @@ def symmetric_vec(n, d):
 
 def green_mesh(density_shape, deltas, rho=None, gamma=None, offset=(0,0,0), component='s'):
     """
-    Computes Green funcion meshes for psi_s and psi_x simultaneously.
+    Computes Green funcion meshes for a particular component
     These meshes are in real space (not scaled space).
     
     Parameters
@@ -29,21 +29,9 @@ def green_mesh(density_shape, deltas, rho=None, gamma=None, offset=(0,0,0), comp
     gamma : float
         relativistic gamma
     
-    
-    
     Returns:
-    tuple of:
-        psi_s_grid : np.array
-            Double-sized array for the psi_s Green function
-        
-        psi_x_grid : 
-            Double-sized array for the psi_x Green function
-        
-        zvec2 : array-like
-            Coordinate vector in z (real space) [m]
+        Double-sized array for the psi_s Green function
 
-        xvec2 : array-like
-            Coordinate vector in x (real space) [m]
     
     """
     
@@ -67,10 +55,13 @@ def green_mesh(density_shape, deltas, rho=None, gamma=None, offset=(0,0,0), comp
     
     
     if component == 'x':
-     #   green = psi_x(*meshes, gamma)
-        green = rho_sign*psi_x0(*meshes, gamma, dx, dy, dz)        
+        green = rho_sign*psi_x0(*meshes, gamma, dx, dy, dz)      
+    elif component == 'xhat':
+        green = rho_sign*psi_xhat0(*meshes, gamma, dx, dy, dz)           
     elif component == 'y':
-        green = psi_y0(*meshes, gamma, dx, dy, dz)        
+        green = psi_y0(*meshes, gamma, dx, dy, dz)    
+    elif component == 'phi':
+        green = rho_sign*psi_phi0(*meshes, gamma, dx, dy, dz)            
     elif component == 's':
         green = psi_s(*meshes, gamma)
     else:
