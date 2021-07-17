@@ -1,4 +1,4 @@
-# CSR3D
+# PyCSR3D
 3D Coherent Synchrotron Radiation
 
 
