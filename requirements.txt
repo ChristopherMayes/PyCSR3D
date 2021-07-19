@@ -1,0 +1,6 @@
+scipy
+numpy
+numba
+matplotlib-base
+h5py
+mpmath
