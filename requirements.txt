@@ -1,6 +1,6 @@
 scipy
 numpy
 numba
-matplotlib-base
+matplotlib
 h5py
 mpmath
