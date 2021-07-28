@@ -408,6 +408,17 @@ def psi_x(x, y, z, gamma):
             + kap*( y4 - x2*f2 - 2*beta2*y2*xp2 )*sin2a / ( xy2*(y2 + f2)*(kap2-beta2*xp2*sin2a2)  ) \
             + kap*beta2*xp*( x2*f2 + y2*f1 )*sin2a*cos2a / ( xy2*(y2+f2)*(kap2-beta2*xp2*sin2a2)  )
           
+    
+    # Space Charge term
+    #psi_x_sc = F/(xp*xy) \
+    #        + (x*(2+x)-y2)*E/(xp*(y2+f2)*xy) \
+    #        + beta*(cos2a-xp)/(kap2 - beta2*xp2*sin2a2) \
+    #        - kap*sin2a * ( (x*(2+x)*(beta2*xp2-2) + y2*(2+beta2*xp2) ) + beta2*xp*(x*(2+x)-y2)*cos2a ) \
+    #            / ( (y4 + x2*f2 + 2*y2*f1) * (kap2 - beta2*xp2*sin2a2 ) )
+    #
+    #psi_x_sc /= (gamma**2-1) # prefactor 1/(gamma*beta)^2 = 1/(gamma^2-1)to agree with the prefactor of psi_x_out
+    #psi_x_out += psi_x_sc
+        
     return psi_x_out
 
 
