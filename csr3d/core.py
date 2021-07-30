@@ -73,7 +73,7 @@ def psi_calc(x, y, z, gamma, components=['x', 'y', 's']):
             + kap*( y4 - x2*f2 - 2*beta2*y2*xp2 )*sin2a / ( xy2*(y2 + f2)*(kap2-beta2*xp2*sin2a2)  ) \
             + kap*beta2*xp*( x2*f2 + y2*f1 )*sin2a*cos2a / ( xy2*(y2+f2)*(kap2-beta2*xp2*sin2a2)  )
           
-        potential['psi_x'] = psi_x_out - (2/beta2)* F/xy # Include the phi term
+        potential['psi_x'] = psi_x_out # - (2/beta2)* F/xy # Include the phi term
         
     
     # psi_phi
@@ -307,9 +307,13 @@ def psi_s(x, y, z, gamma):
     kap = 2*(alp - z)/beta # Simpler form of kappa
     #kap = sqrt(x**2 + y**2 + 4*(1+x) * sin(alp)**2) 
 
-    out = (cos(2*alp) - 1/(1+x)) / (kap - beta*(1+x)*sin(2*alp) )
+    psi_s_out = (cos(2*alp) - 1/(1+x)) / (kap - beta*(1+x)*sin(2*alp) )
+    
+    
+    # Add SC term
+    psi_s_out += -1 / (  (gamma**2-1)*(1+x)*(kap - beta*(1+x)*sin(2*alp))  )
 
-    return out
+    return psi_s_out
 
 
 @vectorize([float64(float64, float64, float64, float64)])
@@ -389,7 +393,7 @@ def psi_x(x, y, z, gamma):
     xp = x + 1
     xp2 = xp**2
     xy2 = x2 + y2
-    xy = np.sqrt(xy2)
+    xy = np.sqrt(xy2) 
     
     # More complicated pattens
     f1 = 2 + 2*x +x2
@@ -410,15 +414,23 @@ def psi_x(x, y, z, gamma):
           
     
     # Space Charge term
-    #psi_x_sc = F/(xp*xy) \
-    #        + (x*(2+x)-y2)*E/(xp*(y2+f2)*xy) \
-    #        + beta*(cos2a-xp)/(kap2 - beta2*xp2*sin2a2) \
-    #        - kap*sin2a * ( (x*(2+x)*(beta2*xp2-2) + y2*(2+beta2*xp2) ) + beta2*xp*(x*(2+x)-y2)*cos2a ) \
-    #            / ( (y4 + x2*f2 + 2*y2*f1) * (kap2 - beta2*xp2*sin2a2 ) )
-    #
-    #psi_x_sc /= (gamma**2-1) # prefactor 1/(gamma*beta)^2 = 1/(gamma^2-1)to agree with the prefactor of psi_x_out
-    #psi_x_out += psi_x_sc
-        
+    psi_x_sc = F/(xp*xy) \
+            + (x*(2+x)-y2)*E/(xp*(y2+f2)*xy) \
+            + beta*(cos2a-xp)/(kap2 - beta2*xp2*sin2a2) \
+            - kap*sin2a * ( (x*(2+x)*(beta2*xp2-2) + y2*(2+beta2*xp2) ) + beta2*xp*(x*(2+x)-y2)*cos2a ) \
+                / ( (y4 + x2*f2 + 2*y2*f1) * (kap2 - beta2*xp2*sin2a2 ) )
+    
+    psi_x_sc /= (gamma**2-1) # prefactor 1/(gamma*beta)^2 = 1/(gamma^2-1)to agree with the prefactor of psi_x_out
+    ## return psi_x_sc # for debugging
+    
+    # Add space charge term
+    psi_x_out += psi_x_sc
+    
+    # Test
+    #psi_phi = -(2/beta2)* F/xy # Include the phi term    
+    #psi_x_out += psi_phi
+    
+    
     return psi_x_out
 
 
@@ -583,6 +595,15 @@ def psi_y(x, y, z, gamma):
                     + kap*beta2*xp2*(y2 + x*(2+x))*sin2a*cos2a / ( ( y4 + x2*f2 + 2*y2*f1)*(kap2 -beta2*xp2*sin2a2)  ) \
                     )
     
+    # Add SC term    
+    psi_y_sc = 2*E / ( (y2 + f2)*xy) - beta / (kap2 - beta2*xp2*sin2a2) \
+            + kap*xp*( beta2*(f1 + y2) -4 + 2*beta2*xp*cos2a )*sin2a \
+            / ( (y4 + x2*f2 + 2*y2*f1) * (kap2 - beta2*xp2*sin2a2 ) )
+
+    psi_y_sc *=  y/(gamma**2-1) # prefactor 1/(gamma*beta)^2 = 1/(gamma^2-1)
+    psi_y_out += psi_y_sc
+    
+    
     return psi_y_out
 
 
@@ -601,7 +622,11 @@ def psi_y0(x, y, z, gamma, dx, dy, dz):
 
     # There are singularities along these axes. 
     # 
-    if x == 0 and y == 0:
+    
+    if y == 0:
+        return 0
+
+    elif x == 0 and y == 0:
         # Along z axis
         #print('Along z axis')
         res = (psi_y(-dx/2, y, z, gamma) +  psi_y(dx/2, y, z, gamma))/2 # Average over x (same as CSR2D)
