@@ -9,10 +9,16 @@ Phys. Rev. Accel. Beams 23, 014402 – Published 9 January 2020
 https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.23.014402
 
 
-
+Also see:
+www.github.com/weiyuanlou/PyCSR2D
 
 
 ![Ws Gaussian](./img/Ws_3d.png)
+
+![Wx Gaussian](./img/Wx_3d.png)
+
+![Wy Gaussian](./img/Wy_3d.png)
+
 # Conda environment
 
 ```bash
