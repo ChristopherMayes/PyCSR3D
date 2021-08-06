@@ -1,3 +1,4 @@
+# conda env create -f environment.yml
 name: csr3d
 channels:
   - conda-forge
@@ -11,3 +12,9 @@ dependencies:
   - matplotlib-base
   - h5py
   - mpmath
+  # For testing and comparisons
+  - pip
+  - pip:
+    - git+git://github.com/ChristopherMayes/PyCSR3D
+    - git+git://github.com/weiyuanlou/PyCSR2D
+
