@@ -3,7 +3,7 @@ import scipy.special as ss
 
 from scipy.optimize import root_scalar
 
-from csr3d.core import psi_calc, psi_x0, psi_xhat0,  psi_y0, psi_y, psi_s, psi_phi0
+from csr3d.core import psi_x0, psi_xhat0,  psi_y0, psi_s, psi_phi0
 
 
 def symmetric_vec(n, d):
