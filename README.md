@@ -10,6 +10,9 @@ https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.23.014402
 
 
 
+
+
+![Ws Gaussian](./img/Ws_3d.png)
 # Conda environment
 
 ```bash
