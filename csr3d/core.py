@@ -550,3 +550,88 @@ def psi_y0(x, y, z, gamma, dx, dy, dz):
 
     return res
 
+
+############ Fields #################
+@vectorize([float64(float64, float64, float64, float64)], target='parallel')
+def Es_case_B(x, y, z, gamma):
+    """
+    Eq.(9) from Ref[1] with no constant factor e*beta**2/rho**2.
+    Note that 'x' here corresponds to 'chi = x/rho', 
+    and 'z' here corresponds to 'xi = z/2/rho' in the paper. 
+    """
+  
+    if z == 0 and x == 0 and y == 0:
+        return 0
+    
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
+    
+    alp = alpha(x, y, z, gamma)
+    kap = 2*(alp - z)/beta
+    
+    sin2a = sin(2*alp)
+    cos2a = cos(2*alp) 
+
+    
+    N1 = cos2a - (1+x)
+    N2 = (1+x)*sin2a - beta*kap
+    N3 = - y**2*sin2a
+    D = kap - beta*(1+x)*sin2a
+    
+    return (N1*N2 + N3)/D**3 
+
+
+@vectorize([float64(float64, float64, float64, float64)], target='parallel')
+def Fx_case_B(x, y, z, gamma):
+    """
+    Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
+    Note that 'x' here corresponds to 'chi = x/rho', 
+    and 'z' here corresponds to 'xi = z/2/rho' in the paper. 
+    """
+  
+    if z == 0 and x == 0 and y == 0:
+        return 0
+    
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
+    
+    alp = alpha(x, y, z, gamma)
+    kap = 2*(alp - z)/beta
+    
+    sin2a = sin(2*alp)
+    cos2a = cos(2*alp) 
+    
+    N1 = sin2a - beta*(1+x)*kap
+    N2 = (1+x)*sin2a - beta*kap
+    N3 = y**2*(cos2a - (1+x) * beta2)
+    D = kap - beta*(1+x)*sin2a
+    
+    return (N1*N2 + N3)/D**3
+
+
+@vectorize([float64(float64, float64, float64, float64)], target='parallel')
+def Fx_case_B_Chris(x, y, z, gamma):
+    """
+    Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
+    Note that 'x' here corresponds to 'chi = x/rho', 
+    and 'z' here corresponds to 'xi = z/2/rho' in the paper. 
+    """
+  
+    if z == 0 and x == 0 and y == 0:
+        return 0
+    
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
+    
+    alp = alpha(x, y, z, gamma)
+    kap = 2*(alp - z)/beta
+    
+    sin2a = sin(2*alp)
+    cos2a = cos(2*alp) 
+    
+    N1 = sin2a - beta*kap
+    N2 = (1+x)*sin2a - beta*kap
+    N3 = y**2*(cos2a - beta2)
+    D = kap - beta*(1+x)*sin2a
+    
+    return (1+x)*(N1*N2 + N3)/D**3
