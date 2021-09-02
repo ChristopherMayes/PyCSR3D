@@ -634,4 +634,48 @@ def Fx_case_B_Chris(x, y, z, gamma):
     N3 = y**2*(cos2a - beta2)
     D = kap - beta*(1+x)*sin2a
     
-    return (1+x)*(N1*N2 + N3)/D**3
+    # Acceleration term only
+    # Fx_acc = (1+x)*(N1*N2 + N3)/D**3
+    
+    # Velocity term
+    N4 = (1 + beta2 - beta*kap*sin2a + x - cos2a*(1 + beta2*(1 + x)) ) / (gamma**2-1) # with prefactor 1/(gamma*beta)^2 = 1/(gamma^2-1)
+    
+    # Total force
+    Fx_total =  (1+x)*(N1*N2 + N3 + N4)/D**3
+    
+    return Fx_total
+
+@vectorize([float64(float64, float64, float64, float64)], target='parallel')
+def Fy_case_B_Chris(x, y, z, gamma):
+    """
+    Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
+    Note that 'x' here corresponds to 'chi = x/rho', 
+    and 'z' here corresponds to 'xi = z/2/rho' in the paper.
+    
+    
+    EXPERIMENTAL - not checked.
+    """
+  
+    if z == 0 and x == 0 and y == 0:
+        return 0
+    
+    beta2 = 1-1/gamma**2
+    beta = sqrt(beta2)
+    
+    alp = alpha(x, y, z, gamma)
+    kap = 2*(alp - z)/beta
+    
+    sin2a = sin(2*alp)
+    cos2a = cos(2*alp) 
+
+    # without overall y
+    N1_acc = (1 + beta2 - beta*kap*sin2a + beta2*x - cos2a*(1 + beta2 + x))
+    
+    N1_sc = (1- beta*cos2a)  / (gamma**2-1) # with prefactor 
+    
+    # denominator term
+    D = kap - beta*(1+x)*sin2a
+    
+    Fy_total = y*(N1_sc + N1_acc) / D**3
+    
+    return Fy_total
