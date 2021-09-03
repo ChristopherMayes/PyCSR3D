@@ -3,7 +3,7 @@ import scipy.special as ss
 
 from scipy.optimize import root_scalar
 from scipy import integrate
-    
+
     
 from csr3d.core import psi_x0, psi_xhat0,  psi_y0, psi_s, psi_phi0, Fx_case_B_Chris, Fy_case_B_Chris 
 
@@ -84,15 +84,23 @@ def green_mesh(density_shape, deltas, rho=None, gamma=None, offset=(0,0,0), comp
 
         # Select special points for IGF
         ix_for_IGF = np.where(abs(Z)<dz*1.5)
+        # Select special points for IGF
+       # ix_for_IGF = np.where(np.logical_and( abs(Z)<dz*2, abs(X)<dx*2 ))        
+        
 
+        print(f'IGF for {len(ix_for_IGF[0])} points...')
+        
         X_special = X[ix_for_IGF]
         Y_special = Y[ix_for_IGF]
         Z_special = Z[ix_for_IGF]
 
         # evaluate special
         f3 = lambda x, y, z: IGF_z(F, x, y, z, dx, dy, dz, gamma)/dz
+        
         res = map(f3, X_special, Y_special, Z_special)
         G_short = np.array(list(res))
+        
+        print(f'Done. Starting midpoint method...')
         
         # Simple midpoint evaluation
         G = F(X, Y, Z, gamma)
@@ -115,14 +123,14 @@ def IGF_z(func, x, y, z, dx, dy, dz, gamma):
     
     """
     
-    func_z = lambda z:  func(x, y, z, gamma)
+    func_x = lambda x: func(x, y, z, gamma)
+    func_z = lambda z: func(x, y, z, gamma)
 
     if abs(z) < 1e-14:
         if (abs(x) < 1e-14) and (abs(y)< 1e-14):
             return 0
-        
-        else:
-            return integrate.quad(func_z, -dz/2, dz/2, points = [0])[0]
-        
-    else:
-        return integrate.quad(func_z, z-dz/2, z+dz/2)[0]
+
+    return integrate.quad(func_z, z-dz/2, z+dz/2, 
+                          points = [z], 
+                          epsrel=1e-4, # Coarse
+                          limit=50)[0]        
