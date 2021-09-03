@@ -2,8 +2,10 @@ import numpy as np
 import scipy.special as ss
 
 from scipy.optimize import root_scalar
-
-from csr3d.core import psi_x0, psi_xhat0,  psi_y0, psi_s, psi_phi0
+from scipy import integrate
+    
+    
+from csr3d.core import psi_x0, psi_xhat0,  psi_y0, psi_s, psi_phi0, Fx_case_B_Chris, Fy_case_B_Chris 
 
 
 def symmetric_vec(n, d):
@@ -64,10 +66,63 @@ def green_mesh(density_shape, deltas, rho=None, gamma=None, offset=(0,0,0), comp
         green = rho_sign*psi_phi0(*meshes, gamma, dx, dy, dz)            
     elif component == 's':
         green = psi_s(*meshes, gamma)
+        
+    elif component in ['Fx_IGF', 'Fy_IGF']:
+        
+        # Pick the function
+        # Takes x, y, z, gamma
+        if component == 'Fx_IGF':
+            F = Fx_case_B_Chris
+        else:
+            F = Fy_case_B_Chris 
+
+        
+        # Flat meshes
+        X = meshes[0].flatten()
+        Y = meshes[1].flatten()
+        Z = meshes[2].flatten()
+
+        # Select special points for IGF
+        ix_for_IGF = np.where(abs(Z)<dz*1.5)
+
+        X_special = X[ix_for_IGF]
+        Y_special = Y[ix_for_IGF]
+        Z_special = Z[ix_for_IGF]
+
+        # evaluate special
+        f3 = lambda x, y, z: IGF_z(F, x, y, z, dx, dy, dz, gamma)/dz
+        res = map(f3, X_special, Y_special, Z_special)
+        G_short = np.array(list(res))
+        
+        # Simple midpoint evaluation
+        G = F(X, Y, Z, gamma)
+        # Fill with IGF
+        G[ix_for_IGF] = G_short
+        
+        # reshape
+        green = G.reshape(meshes[0].shape)
+        
     else:
         raise ValueError(f'Unknown component: {component}')
-
-
     
     return green
     
+
+    
+def IGF_z(func, x, y, z, dx, dy, dz, gamma):
+    """
+    Special Integrated Green Function (IGF) in the z direction only
+    
+    """
+    
+    func_z = lambda z:  func(x, y, z, gamma)
+
+    if abs(z) < 1e-14:
+        if (abs(x) < 1e-14) and (abs(y)< 1e-14):
+            return 0
+        
+        else:
+            return integrate.quad(func_z, -dz/2, dz/2, points = [0])[0]
+        
+    else:
+        return integrate.quad(func_z, z-dz/2, z+dz/2)[0]
