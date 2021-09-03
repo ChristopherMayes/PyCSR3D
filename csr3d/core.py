@@ -609,7 +609,7 @@ def Fx_case_B(x, y, z, gamma):
     return (N1*N2 + N3)/D**3
 
 
-@vectorize([float64(float64, float64, float64, float64)], target='parallel')
+@vectorize([float64(float64, float64, float64, float64)])
 def Fx_case_B_Chris(x, y, z, gamma):
     """
     Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
@@ -645,7 +645,7 @@ def Fx_case_B_Chris(x, y, z, gamma):
     
     return Fx_total
 
-@vectorize([float64(float64, float64, float64, float64)], target='parallel')
+@vectorize([float64(float64, float64, float64, float64)])
 def Fy_case_B_Chris(x, y, z, gamma):
     """
     Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
