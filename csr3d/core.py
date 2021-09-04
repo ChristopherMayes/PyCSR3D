@@ -671,7 +671,7 @@ def Fy_case_B_Chris(x, y, z, gamma):
     # without overall y
     N1_acc = (1 + beta2 - beta*kap*sin2a + beta2*x - cos2a*(1 + beta2 + x))
     
-    N1_sc = (1- beta*cos2a)  / (gamma**2-1) # with prefactor 
+    N1_sc = (1- beta2*cos2a)  / (gamma**2-1) # with prefactor 
     
     # denominator term
     D = kap - beta*(1+x)*sin2a
