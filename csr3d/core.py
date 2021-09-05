@@ -273,6 +273,10 @@ def psi_xhat(x, y, z, gamma):
 def psi_x(x, y, z, gamma):
     """
     Psi_x from Eq. 24 from Ref[X] without the prefactor e beta^2 / (2 rho^2)
+    
+    Warning: this formula is incorrect and should not be used.
+    It is retained here for historical r
+    
     """
         
     beta2 = 1-1/gamma**2
@@ -612,7 +616,12 @@ def Fx_case_B(x, y, z, gamma):
 @vectorize([float64(float64, float64, float64, float64)])
 def Fx_case_B_Chris(x, y, z, gamma):
     """
-    Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
+    Force Fx by combining Ex and By from Ref. [1]
+    
+    Fx ~ (1+x/rho) (Ex - beta*c*By)
+        
+    with no constant factor e*beta**2/rho**2
+    
     Note that 'x' here corresponds to 'chi = x/rho', 
     and 'z' here corresponds to 'xi = z/2/rho' in the paper. 
     """
@@ -648,16 +657,20 @@ def Fx_case_B_Chris(x, y, z, gamma):
 @vectorize([float64(float64, float64, float64, float64)])
 def Fy_case_B_Chris(x, y, z, gamma):
     """
-    Eq.(17) from Ref[1] with no constant factor e*beta**2/rho**2.
+    Force Fy by combining Ey and Bx from Ref. [1]
+    
+    Fy ~ (1+x/rho) (Ey + beta*c*Bx)
+        
+    with no constant factor e*beta**2/rho**2
     Note that 'x' here corresponds to 'chi = x/rho', 
     and 'z' here corresponds to 'xi = z/2/rho' in the paper.
     
     
-    EXPERIMENTAL - not checked.
     """
   
     if z == 0 and x == 0 and y == 0:
         return 0
+    
     
     beta2 = 1-1/gamma**2
     beta = sqrt(beta2)
@@ -676,6 +689,6 @@ def Fy_case_B_Chris(x, y, z, gamma):
     # denominator term
     D = kap - beta*(1+x)*sin2a
     
-    Fy_total = y*(N1_sc + N1_acc) / D**3
+    Fy_total = (1+x)*y*(N1_sc + N1_acc) / D**3
     
     return Fy_total
